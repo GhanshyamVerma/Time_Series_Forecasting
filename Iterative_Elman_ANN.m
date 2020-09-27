@@ -18,7 +18,7 @@ while counter <= FSize(1,1)
 %     ylabel('Time Series values');
     % pause(1)
 %     k = waitforbuttonpress;
-   
+    MinMSE = inf;
 %     prompt={'Enter Size of Test Data:'};
 %     % Create all your text fields with the questions specified by the variable prompt.
 %     titleofPromt='Prompt for Test Data Size'; 
@@ -27,8 +27,8 @@ while counter <= FSize(1,1)
 %     numTest = str2double(answer{1});
 %     TotalDataSize=length(TimeSeriesData);
 %     numTest=floor((TotalDataSize*16)/100);
-    numTest = 30;
-    ScaleFactor=1;
+    numTest = 50;
+    ScaleFactor=100;
     % ForecastedMatrix = zeros(numTest,1);
     % acf = autocorr(TimeSeriesData);
     % % k = waitforbuttonpress;
@@ -53,8 +53,8 @@ while counter <= FSize(1,1)
 %     % The main title of your input dialog interface.
 %     answer=inputdlg(prompt,titleofPromt);
 %     NumItt = str2double(answer{1});
-    NumItt=10;
-    inpt_nodes=3;hdn_nodes=10;
+    NumItt=100;
+%     inpt_nodes=11;hdn_nodes=21;
     %--------------------------------------------------------------------------
     TransformedTechNos = zeros(11,1);
     RangeTS =0; MinTS=0;
@@ -75,7 +75,7 @@ while counter <= FSize(1,1)
 %     for tranformOuterloop = 1:11
 %     % TimeSeriesData  = TimeSeriesData;  
 %     fprintf('T= %f\n',tranformOuterloop);
-tranformOuterloop=2;
+tranformOuterloop=1;
 
     TransformTechReq = 1;
         [FinalTransformedTS,POS,ConstADD,RangeTS,MinTS,range2,x] = TransformationTechnique(TimeSeriesData,tranformOuterloop,Lembda);
@@ -86,9 +86,7 @@ tranformOuterloop=2;
     
 %         inpt_nodes=ipN;hdn_nodes=hd;
     %--------------------------------------------------------------------------
-    MvalidTrail=12;
-for jj=1:MvalidTrail
-MinMSE = inf;
+
     % Training data
     % prompt={'Enter Size of Test Data:'};
     % % Create all your text fields with the questions specified by the variable prompt.
@@ -120,27 +118,13 @@ MinMSE = inf;
 %     numTrainData=numTotalData-numTest;
 %     warning off;
 
-    ValidationSize=numTest;
-
-    base=numTrainData-ValidationSize-MvalidTrail+1;
-    NewTrainData=TrainDATA(1:base+jj-1,:);
-    NewValidData=TrainDATA(base+jj:base+jj+ValidationSize-1,:);
     
-    OriginalTestDATA=TimeSeriesData(base+jj:base+jj+ValidationSize-1,:);
-    OriginalTrainDATA=TimeSeriesData(1:base+jj-1,:);
-    OriginalTotalDATA=vertcat(OriginalTrainDATA,OriginalTestDATA);
-%     numTotalData=length(TrainDATA);
-    numTrainData=length(NewTrainData);
-    TrainDATA=NewTrainData;
-    TestDATA=NewValidData;
-    TransformedTotalDATA=vertcat(TrainDATA,TestDATA);
-    numTotalData=numTrainData+numTest;
 %     TrainDATA=D_org(1:numTrainData);
     % Test_D=D_org((s_train+1):s_org);
-%     for inpt_nodes = 7:12
-%     for hdn_nodes = 14:27
-    TestDATA=TransformedTotalDATA(numTrainData-inpt_nodes+1:end); 
-    OriginalTestDATA=OriginalTotalDATA(numTrainData-inpt_nodes+1:numTotalData);
+    for inpt_nodes = 7:12
+    for hdn_nodes = 14:27
+    TestDATA=FinalTransformedTS(numTrainData-inpt_nodes+1:end); 
+    OriginalTestDATA=TimeSeriesData(numTrainData-inpt_nodes+1:numTotalData);
 %     numTotalData=size(D_org,1); % SizeOfTransformedData=size(TranformedTS,1);
 %     numTrainData=size(TrainDATA,1);  % SizeOfTrain = size(TrainData,1);
     numTest=size(TestDATA,1);   % SizeOfTestData = size(TestData,1);   
@@ -169,8 +153,8 @@ MinMSE = inf;
         t_test=[t_test OriginalTestDATA(i+inpt_nodes)];
     end
 
-%     t_test=FinalTransformedTS(numTrainData+1:numTotalData);
-%     mu=mean(t_test);
+    t_test=FinalTransformedTS(numTrainData+1:numTotalData);
+    mu=mean(t_test);
     % itt loop
     for u = 1:NumItt 
     fprintf('\nFileNo= %f\n',counter);    
@@ -192,7 +176,7 @@ MinMSE = inf;
     T(end)=t_train(end);
     t_for=sim(net,p_test);
     t_for=zeros(test_lim,1);
-%     DifferencedTSForWN = diff(TransformedTotalDATA);
+%     DifferencedTSForWN = diff(FinalTransformedTS);
 %     sigma = std(DifferencedTSForWN);
 %     R = sigma.*randn(numTotalData,1);
     for i=1:test_lim
@@ -202,7 +186,7 @@ MinMSE = inf;
     end
      
      numTest = test_lim;
-     OriginalTestDATA = OriginalTotalDATA(end-numTest+1:end,:);
+     OriginalTestDATA = TimeSeriesData(end-numTest+1:end,:);
 
      if TransformTechReq == 1   
      RetransformedForecastTS = zeros(numTest,1);
@@ -212,33 +196,59 @@ MinMSE = inf;
      end
     % TestDATA = RetransformedForecastTS(end-numTest+1:end,:);
 
-    
+    % fprintf('f s');
+
+
+%     if ShiftReq == 0
+    % figure
+    % % if NormYes == 1
+    % % h1 = plot(FinalTransformedTS,'Color',[.7,.7,.7]);
+    % % else
+    %     h1 = plot(TimeSeriesData,'Color',[.7,.7,.7]);
+    % % end
+    % grid on;
+    % hold on;
+    % h2 = plot(StartTestData:numTotalData,RetransformedForecastTS,'b','LineWidth',2);
+    % % h3 = plot(StartTestData:numTotalData,t_for + 1.96*sqrt(YMSE),'r:','LineWidth',2);
+    % % plot(StartTestData:numTotalData,t_for - 1.96*sqrt(YMSE),'r:','LineWidth',2);
+    % legend([h1 h2 ],'Observed','Forecast');
+    % title({'30-Period Forecasts and Approximate 95% ''Confidence Intervals'})
+    % hold off
+    % else
+    %  SiftedTimeSeries = TimeSeriesData(ShiftReq+1:end);
+    % figure
+    % % if NormYes == 1
+    % % h1 = plot(FinalTransformedTS,'Color',[.7,.7,.7]);
+    % % else
+    %     h1 = plot(SiftedTimeSeries,'Color',[.7,.7,.7]);
+    % % end
+    % grid on;
+    % hold on;
+    % h2 = plot(StartTestData:numTotalData,RetransformedForecastTS,'b','LineWidth',2);
+    % % h3 = plot(StartTestData:numTotalData,t_for + 1.96*sqrt(YMSE),'r:','LineWidth',2);
+    % % plot(StartTestData:numTotalData,t_for - 1.96*sqrt(YMSE),'r:','LineWidth',2);
+    % legend([h1 h2 ],'Observed','Forecast');
+    % title({'30-Period Forecasts and Approximate 95% ''Confidence Intervals'})
+    % hold off    
+%     end
 
     % -------------------------------------------------------------------------
     % Function calling for Accuracy measures
-    [MFE,MAE,SSE,MSE,RMSE,MPE,MAPE,SMAPE]=AccuracyMeasures(OriginalTestDATA,RetransformedForecastTS,numTest);
+    [MFE,MAE,SSE,MSE,RMSE,MPE,MAPE]=AccuracyMeasures(OriginalTestDATA,RetransformedForecastTS,numTest,ScaleFactor);
 
     if MSE < MinMSE 
         MinMSE = MSE;
-        MinMAE = MAE;
+        MinMAE=MAE;
         MinMAPE=MAPE;
-        MinSSE=SSE;
-        MinMFE=MFE;
-        MinRMSE=RMSE;
-        MinMPE=MPE;
-        MinSMAPE=SMAPE;
-        
         InputNode = inpt_nodes;
         HiddenNode = hdn_nodes;
         MinForecase = RetransformedForecastTS;
         MinTransNo = tranformOuterloop;
         MinIttNo =u;
     end
-    fprintf('MinMSE = %f\n',MinMSE);
-    clear R;
     end % no of itteration
-%     end % hidden node for loop
-%     end % input node for loop
+    end % hidden node for loop
+    end % input node for loop
 %     end % outer transform loop
 
 %     fprintf('Minimum value of MSE = %f\n',MinMSE);
@@ -263,31 +273,24 @@ MinMSE = inf;
 
 % 	finalResult = [MinSSE MinTransNo MinIttNo MinForecase];
 % 	xlswrite(DataRead,transpose(finalResult),2);
-    filename = '25_Mining_Val_ItrElman.xlsx';
+    filename = 'IttElmanANNResult.xlsx';
 %     Headings = {DataRead};
-    sheet = jj;
-    tempjj = 2*jj;
-   
-    xlRangeTestDataH = [('A' + tempjj - 2)  '1'];
-    TotalDataInfo = {'TotalData';numTotalData};
-    xlswrite(filename,TotalDataInfo,1,xlRangeTestDataH);
-    xlRangeTestDataH = [('A' + tempjj -1)  '1'];
-    TotalDataInfo = {'TrianData';numTrainData};
-    xlswrite(filename,TotalDataInfo,1,xlRangeTestDataH);
-    xlRangeTestDataH = 'C18';
-    TotalDataInfo = {'TestData';numTest};
-    xlswrite(filename,TotalDataInfo,1,xlRangeTestDataH);
+    sheet = counter;
+    xlRangeH = 'D2';
+    Heading1 = {DataRead};
+    xlswrite(filename,Heading1,sheet,xlRangeH);
     
-    xlRangeTestData = [('A' + tempjj - 2)  '20']; 
-%    xlRangeTestData = 'A20';
-    TotalDataInfo = {'ValData'};
-    xlswrite(filename,TotalDataInfo,1,xlRangeTestData);
     
-    xlRangeTestData = [('A' + tempjj - 2 )  '21'];
-%    xlRangeTestData = 'A21';
-    xlswrite(filename,OriginalTestDATA,1,xlRangeTestData);
+    xlRangeTestDataH = 'A7';
+    TotalDataInfo = {'Total Data size';OriginalnumTotalData;'Test Data'};
+    xlswrite(filename,TotalDataInfo,sheet,xlRangeTestDataH);
     
-   
+    xlRangeTestData = 'A10';
+    xlswrite(filename,OriginalTestDATA,sheet,xlRangeTestData);
+    
+    xlRangeTestDatasizeH = 'C7';
+    TotalDataInfo = {'Test Data size';numTest};
+    xlswrite(filename,TotalDataInfo,sheet,xlRangeTestDatasizeH);
     %----------
 %    (1) Ordinary Differencing',...
 %     '(2) Seasonal Differencing',...
@@ -305,7 +308,7 @@ MinMSE = inf;
         case 1
             TechName = '1st Differencing';
         case 2
-            TechName = 'S_Diff';
+            TechName = 'NAN';
         case 3
             TechName = 'Ratio Transformation';
         case 4 
@@ -327,24 +330,21 @@ MinMSE = inf;
         
     end
     %-------------
-    xlRangeT = 'A3';
-    TTech = {'Trans. Tech.';'NumItt';'MSE';'MAE';'MAPE';'SSE';'MFE';'RMSE';'MPE';'SMAPE';'Inpt_node';'Hdd_Node'};
-    xlswrite(filename,TTech,1,xlRangeT);
+    xlRangeT = 'D3';
+    TTech = {'Trans. Tech.';TechName};
+    xlswrite(filename,TTech,sheet,xlRangeT);
+
+    A = {'Minimum MSE=';MinMSE;'Size of Train Data';numTrainData;'IttElmANN'};
     
+    xlRange = 'D5';
+    xlswrite(filename,A,sheet,xlRange)
+    nodesANN = {'Input Nodes=';InputNode;'Hidden Nodes=';HiddenNode;'MinMAE';MinMAE;'MinMAPE';MinMAPE;'itt';NumItt};
     
-    xlRangeT = [('A' + tempjj -1 )  '3'];
-   % xlRangeT = 'C3';
-    TTech2 = {TechName;NumItt;MinMSE;MinMAE;MinMAPE;MinSSE;MinMFE;MinRMSE;MinMPE;MinSMAPE;InputNode;HiddenNode};
-    xlswrite(filename,TTech2,1,xlRangeT);
-    
-    xlRangeTestData = [('A' + tempjj -1)  '20'];
-  % xlRangeTestData = 'C20';
-    TotalDataInfo = {'ItrElman'};
-    xlswrite(filename,TotalDataInfo,1,xlRangeTestData);
-    xlRangeTestData = [('A' + tempjj -1)  '21'];    
-   % xlRangeTestData = 'C21';
-    xlswrite(filename,MinForecase,1,xlRangeTestData);
+    xlRange = 'E3';
+    xlswrite(filename,nodesANN,sheet,xlRange)
+    xlRange1 = 'D10';
+    xlswrite(filename,MinForecase,sheet,xlRange1);
 %     xlswrite(FILE,ARRAY,SHEET,RANGE)
-end
+
     counter = counter + 1;
 end % end while loop
